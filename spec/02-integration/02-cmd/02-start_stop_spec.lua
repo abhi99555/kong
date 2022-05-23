@@ -591,6 +591,32 @@ describe("kong start/stop #" .. strategy, function()
 
   end)
 
-end)
+  describe("deprecated properties", function()
+    local function start_kong(opts)
+      local kopts = {
+        log_level  = "debug",
+        database   = "postgres",
+        nginx_conf = "spec/fixtures/custom_nginx.template",
+      }
 
+      for k, v in pairs(opts or {}) do
+        kopts[k] = v
+      end
+
+      helpers.clean_logfile()
+
+      assert(helpers.start_kong(kopts, nil, nil))
+    end
+
+    after_each(function()
+      helpers.stop_kong(nil, true)
+    end)
+
+    it("deprecate <worker_consistency>", function()
+      start_kong({worker_consistency = "strict"})
+      assert.errlog().has.line([[the configuration value 'worker_consistency' for configuration property worker_consistency is deprecated]])
+      assert.errlog().has.line([[the configuration property 'worker_consistency' is deprecated]])
+    end)
+  end)
+end)
 end
