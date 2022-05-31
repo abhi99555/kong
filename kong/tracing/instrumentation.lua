@@ -79,7 +79,8 @@ function _M.balancer(ctx)
       }
     })
 
-    if i < try_count then
+    if try.state then
+      span:set_attribute("http.status_code", try.code)
       span:set_status(2)
     end
 
@@ -147,6 +148,7 @@ function _M.http_client()
     end
 
     local span = tracer.start_span("HTTP " .. method .. " " .. uri, {
+      span_kind = 3,
       attributes = attributes,
     })
 
@@ -188,6 +190,7 @@ function _M.request(ctx)
       or time_ns()
 
   local active_span = tracer.start_span(span_name, {
+    span_kind = 2, -- server
     start_time_ns = start_time,
     attributes = {
       ["http.method"] = method,
@@ -198,6 +201,7 @@ function _M.request(ctx)
       ["net.peer.ip"] = client.get_ip(),
     },
   })
+
   tracer.set_active_span(active_span)
 end
 

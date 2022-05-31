@@ -201,6 +201,18 @@ jobs:
           docker restart kong_redis
           docker logs kong_redis
 
+    - name: Run OpenTelemetry Collector
+      run: |
+          mkdir -p ${{ github.workspace }}/tmp/otel
+          chmod 777 ${{ github.workspace }}/tmp/otel
+          docker run -p 4317:4317 -p 4318:4318 -p 55679:55679 \
+              -v ${{ github.workspace }}/spec/fixtures/opentelemetry/otelcol.yaml:/etc/otel-collector-config.yaml \
+              -v ${{ github.workspace }}/tmp/otel:/etc/otel \
+              --name opentelemetry-collector -d \
+              otel/opentelemetry-collector-contrib:0.52.0 \
+              --config=/etc/otel-collector-config.yaml
+          docker logs opentelemetry-collector
+
     - name: Tests
       run: |
           eval `luarocks path`
