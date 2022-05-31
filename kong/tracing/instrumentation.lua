@@ -72,10 +72,8 @@ function _M.balancer(ctx)
     local try = balancer_tries[i]
     span = tracer.start_span("balancer try #" .. i, {
       kind = 3, -- client
-      start_time_ns = try.balancer_start * 100000,
+      start_time_ns = try.balancer_start * 1e6,
       attributes = {
-        ["kong.balancer.state"] = try.state,
-        ["http.status_code"] = try.code,
         ["net.peer.ip"] = try.ip,
         ["net.peer.port"] = try.port,
       }
@@ -86,19 +84,19 @@ function _M.balancer(ctx)
     end
 
     -- last try
-    if i == try_count then
-      local upstream_finish_time = (ctx.KONG_BODY_FILTER_ENDED_AT or 0) * 100000
+    if i == try_count and try.state == nil then
+      local upstream_finish_time = (ctx.KONG_BODY_FILTER_ENDED_AT or 0) * 1e6
       span:finish(upstream_finish_time)
 
     else
       if not upstream_connect_time then
-        upstream_connect_time = split(var.upstream_connect_time, ",", "jo")
+        upstream_connect_time = split(var.upstream_connect_time, ", ", "jo")
       end
 
       -- retrying
       if try.balancer_latency ~= nil then
-        local try_upstream_connect_time = (upstream_connect_time[i] or 0) * 1000
-        span:finish((try.balancer_start + try.balancer_latency + try_upstream_connect_time) * 100000)
+        local try_upstream_connect_time = (tonumber(upstream_connect_time[i]) or 0) * 1000
+        span:finish((try.balancer_start + try.balancer_latency + try_upstream_connect_time) * 1e6)
       else
         span:finish()
       end
@@ -186,7 +184,7 @@ function _M.request(ctx)
   local req_uri = ctx.request_uri or var.request_uri
 
   local start_time = ngx.ctx.KONG_PROCESSING_START
-      and ngx.ctx.KONG_PROCESSING_START * 100000
+      and ngx.ctx.KONG_PROCESSING_START * 1e6
       or time_ns()
 
   local active_span = tracer.start_span(span_name, {
@@ -259,7 +257,7 @@ function _M.runloop_log_before(ctx)
   -- check root span type to avoid encounter error
   if active_span and type(active_span.finish) == "function" then
     local end_time = ctx.KONG_BODY_FILTER_ENDED_AT
-                  and ctx.KONG_BODY_FILTER_ENDED_AT * 100000
+                  and ctx.KONG_BODY_FILTER_ENDED_AT * 1e6
     active_span:finish(end_time)
   end
 end
@@ -274,7 +272,7 @@ do
         insert(detail_logs, "\nSpan #" .. i .. " name=" .. span.name)
 
         if span.end_time_ns then
-          insert(detail_logs, " duration=" .. (span.end_time_ns - span.start_time_ns) / 100000 .. "ms")
+          insert(detail_logs, " duration=" .. (span.end_time_ns - span.start_time_ns) / 1e6 .. "ms")
         end
 
         if span.attributes then
