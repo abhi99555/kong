@@ -54,7 +54,7 @@ for _, strategy in helpers.each_strategy() do
     end
 
     describe("otelcol receives traces #http", function()
-      local LIMIT = 10
+      local LIMIT = 100
 
       lazy_setup(function()
         -- clear file
@@ -76,6 +76,7 @@ for _, strategy in helpers.each_strategy() do
       end)
 
       it("valid traces", function()
+        ngx.sleep(3)
         local f = assert(io.open(OTELCOL_FILE_EXPORTER_PATH, "rb"))
         local raw_content = f:read("*all")
         f:close()

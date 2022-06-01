@@ -5,7 +5,7 @@ local tablex = require "pl.tablex"
 local pb = require "pb"
 
 local table_merge = utils.table_merge
-local HTTP_PORT = 35002
+local HTTP_PORT = 35000
 
 for _, strategy in helpers.each_strategy() do
   describe("opentelemetry exporter #" .. strategy, function()
@@ -59,6 +59,7 @@ for _, strategy in helpers.each_strategy() do
 
     describe("valid #http request", function ()
       lazy_setup(function()
+        os.execute("fuser -n tcp -k " .. HTTP_PORT)
         setup_instrumentations("all", {
           http_headers = {
             ["X-Access-Token"] = {"token"},
@@ -111,6 +112,7 @@ for _, strategy in helpers.each_strategy() do
 
     describe("overwrite resource attributes #http", function ()
       lazy_setup(function()
+        os.execute("fuser -n tcp -k " .. HTTP_PORT)
         setup_instrumentations("all", {
           resource_attributes = {
             ["service.name"] = "kong_oss",

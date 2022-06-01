@@ -129,20 +129,16 @@ do
 
   local pb_memo = {
     resource_spans = {
-      {
-        resource = {
+      { resource = {
           attributes = {}
         },
         scope_spans = {
-          {
-            scope = {
+          { scope = {
               name = "kong-internal",
               version = "0.1.0",
             },
-            spans = {},
-          },
-        },
-      },
+            spans = {}, },
+        }, },
     },
   }
 
