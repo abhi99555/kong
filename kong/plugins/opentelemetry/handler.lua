@@ -44,7 +44,7 @@ local last_run_cache = setmetatable({}, { __mode = "k" })
 local function http_export_request(conf, pb_data, headers)
   local httpc = http.new()
   httpc:set_timeouts(conf.connect_timeout, conf.send_timeout, conf.read_timeout)
-  local res, err = httpc:request_uri(conf.http_endpoint, {
+  local res, err = httpc:request_uri(conf.endpoint, {
     method = "POST",
     body = pb_data,
     headers = headers,
@@ -116,7 +116,7 @@ local function http_export(premature, conf)
   ngx_update_time()
   local duration = ngx_now() - start
   ngx_log(ngx_DEBUG, _log_prefix, "opentelemetry exporter sent " .. spans_n ..
-    " traces to " .. conf.http_endpoint .. " in " .. duration .. " seconds")
+    " traces to " .. conf.endpoint .. " in " .. duration .. " seconds")
 end
 
 local function process_span(span)

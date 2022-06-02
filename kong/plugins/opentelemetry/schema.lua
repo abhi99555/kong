@@ -34,7 +34,7 @@ return {
     { config = {
       type = "record",
       fields = {
-        { http_endpoint = typedefs.url { required = true } }, -- OTLP/HTTP
+        { endpoint = typedefs.url { required = true } }, -- OTLP/HTTP
         { headers = typedefs.headers },
         { resource_attributes = resource_attributes },
         { batch_span_count = { type = "integer", required = true, default = 200 } },
