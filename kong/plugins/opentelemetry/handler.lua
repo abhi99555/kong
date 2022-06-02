@@ -38,7 +38,7 @@ local default_headers = {
 
 -- worker-level spans cache
 local spans_cache = new_tab(5000, 0)
-local http_headers_cache = setmetatable({}, { __mode = "k" })
+local headers_cache = setmetatable({}, { __mode = "k" })
 local last_run_cache = setmetatable({}, { __mode = "k" })
 
 local function http_export_request(conf, pb_data, headers)
@@ -73,18 +73,18 @@ local function http_export(premature, conf)
 
   -- cache http headers
   local headers = default_headers
-  if conf.http_headers then
-    headers = http_headers_cache[conf.http_headers]
+  if conf.headers then
+    headers = headers_cache[conf.headers]
   end
 
   if not headers then
     headers = clone(default_headers)
-    if conf.http_headers and conf.http_headers ~= null then
-      for k, v in pairs(conf.http_headers) do
+    if conf.headers and conf.headers ~= null then
+      for k, v in pairs(conf.headers) do
         headers[k] = v and v[1]
       end
     end
-    http_headers_cache[conf.http_headers] = headers
+    headers_cache[conf.headers] = headers
   end
 
   -- batch send spans
