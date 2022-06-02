@@ -132,9 +132,12 @@
 
 #### Plugins
 
-- The HTTP-log plugin `headers` field now only takes a single string per header name,
+- **HTTP-log**: `headers` field now only takes a single string per header name,
   where it previously took an array of values
   [#6992](https://github.com/Kong/kong/pull/6992)
+- **AWS Lambda**: `aws_region` field must be set through either plugin config or environment variables,
+  allow both `host` and `aws_region` fields, and always apply SigV4 signature.
+  [#8082](https://github.com/Kong/kong/pull/8082)
 
 ### Deprecations
 
@@ -199,6 +202,8 @@
   Build-in instrumentation types and sampling rate are configuable through
   `opentelemetry_tracing` and `opentelemetry_tracing_sampling_rate` options.
   [#8724](https://github.com/Kong/kong/pull/8724)
+- Added `path`, `uri_capture`, and `query_arg` options to upstream `hash_on`
+  for load balancing. [#8701](https://github.com/Kong/kong/pull/8701)
 
 #### Plugins
 
@@ -210,6 +215,11 @@
 - **Zipkin**: add support for including HTTP path in span name
   through configuration property `http_span_name`.
   [#8150](https://github.com/Kong/kong/pull/8150)
+- **Zipkin**: add support for socket connect and send/read timeouts
+  through configuration properties `connect_timeout`, `send_timeout`,
+  and `read_timeout`. This can help mitigate `ngx.timer` saturation
+  when upstream collectors are unavailable or slow.
+  [#8735](https://github.com/Kong/kong/pull/8735)
 
 #### Configuration
 
@@ -217,6 +227,10 @@
   developers/operators to specify the OpenResty installation to use when
   running Kong (instead of using the system-installed OpenResty)
   [#8412](https://github.com/Kong/kong/pull/8412)
+
+#### PDK
+- Added new PDK function: `kong.request.get_start_time()`
+  [#8688](https://github.com/Kong/kong/pull/8688)
 
 ### Fixes
 

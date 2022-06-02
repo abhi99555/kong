@@ -210,7 +210,7 @@ _G.kong.core_cache = {
 local db = assert(DB.new(conf))
 assert(db:init_connector())
 db.plugins:load_plugin_schemas(conf.loaded_plugins)
-db.vaults_beta:load_vault_schemas(conf.loaded_vaults)
+db.vaults:load_vault_schemas(conf.loaded_vaults)
 local blueprints = assert(Blueprints.new(db))
 local dcbp
 local config_yml
@@ -427,7 +427,7 @@ local function get_db_utils(strategy, tables, plugins, vaults)
 
   db:truncate("plugins")
   assert(db.plugins:load_plugin_schemas(conf.loaded_plugins))
-  assert(db.vaults_beta:load_vault_schemas(conf.loaded_vaults))
+  assert(db.vaults:load_vault_schemas(conf.loaded_vaults))
 
   -- cleanup the tags table, since it will be hacky and
   -- not necessary to implement "truncate trigger" in Cassandra
