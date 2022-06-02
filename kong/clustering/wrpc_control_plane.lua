@@ -12,6 +12,7 @@ local constants = require("kong.constants")
 local openssl_x509 = require("resty.openssl.x509")
 local wrpc = require("kong.tools.wrpc")
 local wrpc_proto = require("kong.tools.wrpc.proto")
+local utils = require("kong.tools.utils")
 local string = string
 local setmetatable = setmetatable
 local type = type
@@ -30,6 +31,7 @@ local ngx_time = ngx.time
 local ngx_var = ngx.var
 local table_insert = table.insert
 local table_concat = table.concat
+local deflate_gzip = utils.deflate_gzip
 
 local kong_dict = ngx.shared.kong
 local KONG_VERSION = kong.version
@@ -168,7 +170,7 @@ function _M:export_deflated_reconfigure_payload()
 
   local service = get_config_service(self)
   self.config_call_rpc, self.config_call_args = assert(service:encode_args("ConfigService.SyncConfig", {
-    config = config_table,
+    config = deflate_gzip(cjson_encode(config_table)),
     version = config_version,
     config_hash = config_hash,
     hashes = hashes,

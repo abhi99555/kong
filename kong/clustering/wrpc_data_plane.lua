@@ -2,10 +2,11 @@
 local semaphore = require("ngx.semaphore")
 local ws_client = require("resty.websocket.client")
 local declarative = require("kong.db.declarative")
-local protobuf = require("kong.tools.protobuf")
 local wrpc = require("kong.tools.wrpc")
 local constants = require("kong.constants")
 local wrpc_proto = require("kong.tools.wrpc.proto")
+local cjson = require("cjson.safe")
+local utils = require("kong.tools.utils")
 local assert = assert
 local setmetatable = setmetatable
 local type = type
@@ -16,6 +17,8 @@ local ngx_log = ngx.log
 local ngx_sleep = ngx.sleep
 local kong = kong
 local exiting = ngx.worker.exiting
+local inflate_gzip = utils.inflate_gzip
+local cjson_decode = cjson.decode
 
 
 local KONG_VERSION = kong.version
@@ -60,15 +63,11 @@ local function get_config_service()
     wrpc_config_service:import("kong.services.config.v1.config")
     wrpc_config_service:set_handler("ConfigService.SyncConfig", function(peer, data)
       if peer.config_semaphore then
-        if data.config.plugins then
-          for _, plugin in ipairs(data.config.plugins) do
-            plugin.config = protobuf.pbunwrap_struct(plugin.config)
-          end
-        end
-        data.config._format_version = data.config.format_version
-        data.config.format_version = nil
+        local json_config = assert(inflate_gzip(data.config))
+        peer.config_obj.next_config = assert(cjson_decode(json_config))
+        peer.config_obj.next_config._format_version = peer.config_obj.next_config.format_version
+        peer.config_obj.next_config.format_version = nil
 
-        peer.config_obj.next_config = data.config
         peer.config_obj.next_hash = data.config_hash
         peer.config_obj.next_hashes = data.hashes
         peer.config_obj.next_config_version = tonumber(data.version)
@@ -186,7 +185,7 @@ function _M:communicate(premature)
         local hashes = self.next_hashes
         if config_table and config_version > last_config_version then
           ngx_log(ngx_INFO, _log_prefix, "received config #", config_version, log_suffix)
-
+          
           local pok, res
           pok, res, err = xpcall(self.update_config, debug.traceback, self, config_table, config_hash, hashes)
           if pok then
